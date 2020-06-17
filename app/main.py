@@ -14,16 +14,16 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method != 'POST':
-        return jsonify({"Error": "Неверный метод"})
+        return jsonify({"Error": "Wrong method"})
 
     # print(request.files)
     if 'file' not in request.files:
-        return jsonify({"Error": "Файл не передан1"})
+        return jsonify({"Error": "File is not send (1)"})
     file = request.files['file']
     if not file:
-        return jsonify({"Error": "Файл не передан2"})
+        return jsonify({"Error": "File is not send (2)"})
     if not allowed_file(file.filename):
-        return jsonify({"Error": "Неверный формат файла"})
+        return jsonify({"Error": "Wrong file format"})
 
     ext = os.path.splitext(file.filename)[1]
     filename = secure_filename(file.filename) + ext
