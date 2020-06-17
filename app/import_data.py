@@ -5,217 +5,217 @@ import os
 import app.utils
 
 def importFromGeoScan(FileName, IsOldVersion = False):
-    # try:
-    import struct
-    with open(FileName, "rb") as f:
-        # Чтение заголовка файла
-        label, IDVersion, MainNumber, SerNumber, ProfSerNumber, State, NTraces, NSamples, NTextLabels, Tall, Eps, Ddxmm, \
-        StartPosition, StartX, StartY, StartZ = struct.unpack(
-            "IIIIIIIIIIfiqqqq", f.read(struct.calcsize("IIIIIIIIIIfiqqqq")))
+    try:
+        import struct
+        with open(FileName, "rb") as f:
+            # Чтение заголовка файла
+            label, IDVersion, MainNumber, SerNumber, ProfSerNumber, State, NTraces, NSamples, NTextLabels, Tall, Eps, Ddxmm, \
+            StartPosition, StartX, StartY, StartZ = struct.unpack(
+                "IIIIIIIIIIfiqqqq", f.read(struct.calcsize("IIIIIIIIIIfiqqqq")))
 
-        if IsOldVersion:
-            NSamples -= 2
+            if IsOldVersion:
+                NSamples -= 2
 
-        f.read(8 + 8)
-        # CreateTime_low, CreateTime_high = struct.unpack("II", f.read(struct.calcsize("II")))
-        # print(CreateTime_low, CreateTime_high)
-        # ManipulationTime_low, ManipulationTime_high = struct.unpack("II", f.read(struct.calcsize("II")))
-        # print(ManipulationTime_low, ManipulationTime_high)
+            f.read(8 + 8)
+            # CreateTime_low, CreateTime_high = struct.unpack("II", f.read(struct.calcsize("II")))
+            # print(CreateTime_low, CreateTime_high)
+            # ManipulationTime_low, ManipulationTime_high = struct.unpack("II", f.read(struct.calcsize("II")))
+            # print(ManipulationTime_low, ManipulationTime_high)
 
-        La, Tstart, Tspp, SppTreshold, Kraz, WinSize, HorWinSize, WhiteProcent, BlackProcent, ScanMode, NSum, NTpz = struct.unpack(
-            "IiiffIIiiIII", f.read(struct.calcsize("IiiffIIiiIII")))
+            La, Tstart, Tspp, SppTreshold, Kraz, WinSize, HorWinSize, WhiteProcent, BlackProcent, ScanMode, NSum, NTpz = struct.unpack(
+                "IiiffIIiiIII", f.read(struct.calcsize("IiiffIIiiIII")))
 
-        F4_TEXT_STRING_SIZE = 40
-        AntenName = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
-        Operator = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
-        Object_ = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
-        Tips1 = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
-        Tips2 = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
-        Tips3 = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
-        CreatingUserNumber, LastUserNumber, ZeroZone, ShiftProcent = struct.unpack("llii", f.read(struct.calcsize("llii")))
+            F4_TEXT_STRING_SIZE = 40
+            AntenName = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
+            Operator = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
+            Object_ = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
+            Tips1 = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
+            Tips2 = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
+            Tips3 = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
+            CreatingUserNumber, LastUserNumber, ZeroZone, ShiftProcent = struct.unpack("llii", f.read(struct.calcsize("llii")))
 
-        GPRUnit = "ОКО-2"
-        import re
-        try:
-            Frequency = float("".join(re.findall("\d", AntenName)))
-        except ValueError:
-            Frequency = 1000
-
-        xState = State % 0x1000
-        digit3 = xState // 0x100
-        if digit3 >= 0x8:
-            # print("Файл был сжат...")
-            isCompress = True
-        else:
-            isCompress = False
-
-        f.seek(512)
-
-        if isCompress:
-            compress_data = f.read()
-            import bz2
-            decompress_data = bz2.decompress(compress_data)
-            f.close()
-
-            AFilePath = os.path.dirname(FileName)
-            AFileName = os.path.basename(FileName)
-            NewFileName = AFilePath + "//___" + AFileName
-            # print(NewFileName)
-            f = open(NewFileName, "wb")
-            f.write(decompress_data)
-            f.close()
-            f = open(NewFileName, "rb")
-
-        # Чтение массива цветов
-        ColorArray = []
-        COLOR_ARRAY_LENGTH = 256
-        for i in range(COLOR_ARRAY_LENGTH):
-            c, = struct.unpack("L", f.read(struct.calcsize("L")))
-            ColorArray.append(c)
-        # print(ColorArray)
-
-        # Чтение массива коэффициентов выравнивания
-        MArray = np.zeros((NSamples))
-        for i in range(NSamples):
-            c, = struct.unpack("f", f.read(struct.calcsize("f")))
-            MArray[i] = c
-        # unPaint.drawPlot(np.arange(NSamples), MArray)
-
-        # Чтение массива трасс
-        Data = np.zeros((NTraces, NSamples))
-        Info = []
-
-        TimeCollecting = []
-        Labels = []
-        for i in range(NTraces):
-            t = f.read(8)
-            intervals = int.from_bytes(t, byteorder='little')
-
-            TimeCollecting.append(intervals)
-
-            Position, X, Y, Z, IAnt, LabelID, LabelPos = struct.unpack("iiiiiII", f.read(struct.calcsize("iiiiiII")))
-            info = {"Position": Position, "X": X, "Y": Y, "Z": Z, "IAnt": IAnt, "LabelID": LabelID,
-                    "LabelPos": LabelPos}
-            if LabelID > 0:
-                Labels.append(i)
-
-            t = f.read(8)
-
-
+            GPRUnit = "ОКО-2"
+            import re
             try:
-                Data[i,:] = np.fromfile(f, count=NSamples, dtype="float32")
+                Frequency = float("".join(re.findall("\d", AntenName)))
             except ValueError:
-                if i == NTraces-1:
-                    Data[i, :] = Data[i-1, :]
-            # if i == 0:
-            #     unPaint.drawPlot(np.arange(NSamples), Data[i,:])
+                Frequency = 1000
 
-            # for j in range(NSamples):
-            #     A, = struct.unpack("f", f.read(struct.calcsize("f")))
-            #     Data[i][j] = A
+            xState = State % 0x1000
+            digit3 = xState // 0x100
+            if digit3 >= 0x8:
+                # print("Файл был сжат...")
+                isCompress = True
+            else:
+                isCompress = False
 
-            Info.append(info)
+            f.seek(512)
 
-        try:
-            Data = Data.astype("float64")
-        except MemoryError:
-            return None
-        # for i in range(NTraces):
-        #     if TimeCollecting[i] == 0:
-        #         if i == 0:
-        #             TimeCollecting[i] = TimeCollecting[i+1]
-        #         elif i == NTraces-1:
-        #             TimeCollecting[i] = TimeCollecting[i-1]
-        #         else:
-        #             TimeCollecting[i] = (TimeCollecting[i+1] + TimeCollecting[i-1])/2
+            if isCompress:
+                compress_data = f.read()
+                import bz2
+                decompress_data = bz2.decompress(compress_data)
+                f.close()
 
+                AFilePath = os.path.dirname(FileName)
+                AFileName = os.path.basename(FileName)
+                NewFileName = AFilePath + "//___" + AFileName
+                # print(NewFileName)
+                f = open(NewFileName, "wb")
+                f.write(decompress_data)
+                f.close()
+                f = open(NewFileName, "rb")
 
-        # TimeCollecting = np.array(TimeCollecting)
-        # Years = []
-        # for i,interval in enumerate(TimeCollecting):
-        #     # print(interval)
-        #     DateTime = app.utils.DateTransforms.getDateTime(interval)
-        #     if DateTime is None:
-        #         # print("Времена записи %d трассы некорректны!" % i)
-        #         TimeCollecting[i] = 0
-        #     else:
-        #         Years.append(DateTime.year)
-        # Years = np.array(Years)
-        # if len(Years) == 0:
-        #     TimeCollecting = None
-        # else:
-        #     freq = np.bincount(Years)
-        #     currYear = np.argmax(freq)
-        #     for i,interval in enumerate(TimeCollecting):
-        #         DateTime = app.utils.DateTransforms.getDateTime(interval)
-        #         if (DateTime is not None) and (np.abs(DateTime.year - currYear) > 1):
-        #             # print("Времена записи %d трассы некорректны! %d" % (i, DateTime.year))
-        #             TimeCollecting[i] = 0
-        #
-        #     if (len(TimeCollecting) <= 1) or (TimeCollecting[0] == 0) or (TimeCollecting[1] < TimeCollecting[0]) or (TimeCollecting[-1] == 0) or (TimeCollecting[-1] < TimeCollecting[-2]) :
-        #         TimeCollecting = None
-        #     else:
-        #         for i in range(1, len(TimeCollecting)-1):
-        #             if TimeCollecting[i] != 0:
-        #                 i1 = i-1
-        #                 i2 = i+1
-        #                 while (TimeCollecting[i1]==0):
-        #                     i1 -= 1
-        #                 while (TimeCollecting[i2]==0):
-        #                     i2 += 1
-        #                 if not (TimeCollecting[i1] <= TimeCollecting[i] <= TimeCollecting[i2]):
-        #                     TimeCollecting[i] = 0
-        #
-        #         from scipy.interpolate import interp1d
-        #         for i in range(1, len(TimeCollecting) - 1):
-        #             if TimeCollecting[i] == 0:
-        #                 i_last = i-1
-        #                 i_next = i+1
-        #                 while TimeCollecting[i_next] == 0:
-        #                     i_next += 1
-        #                 t_last = TimeCollecting[i_last]
-        #                 t_next = TimeCollecting[i_next]
-        #                 func = interp1d([i_last, i_next], [t_last, t_next], kind='linear', fill_value='extrapolate')
-        #                 TimeCollecting[i_last:i_next+1] = func(range(i_last, i_next+1))
-        #
-        #     if TimeCollecting is not None:
-        #         TimeCollecting = TimeCollecting.astype("int64")
+            # Чтение массива цветов
+            ColorArray = []
+            COLOR_ARRAY_LENGTH = 256
+            for i in range(COLOR_ARRAY_LENGTH):
+                c, = struct.unpack("L", f.read(struct.calcsize("L")))
+                ColorArray.append(c)
+            # print(ColorArray)
+
+            # Чтение массива коэффициентов выравнивания
+            MArray = np.zeros((NSamples))
+            for i in range(NSamples):
+                c, = struct.unpack("f", f.read(struct.calcsize("f")))
+                MArray[i] = c
+            # unPaint.drawPlot(np.arange(NSamples), MArray)
+
+            # Чтение массива трасс
+            Data = np.zeros((NTraces, NSamples))
+            Info = []
+
+            TimeCollecting = []
+            Labels = []
+            for i in range(NTraces):
+                t = f.read(8)
+                intervals = int.from_bytes(t, byteorder='little')
+
+                TimeCollecting.append(intervals)
+
+                Position, X, Y, Z, IAnt, LabelID, LabelPos = struct.unpack("iiiiiII", f.read(struct.calcsize("iiiiiII")))
+                info = {"Position": Position, "X": X, "Y": Y, "Z": Z, "IAnt": IAnt, "LabelID": LabelID,
+                        "LabelPos": LabelPos}
+                if LabelID > 0:
+                    Labels.append(i)
+
+                t = f.read(8)
 
 
-        # Чтение массива текстов меток
-        # LabelTexts = []
-        # for i in range(NTextLabels):
-        #     LabelID, LabelClr = struct.unpack("IL", f.read(struct.calcsize("IL")))
-        #     try:
-        #         Text = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
-        #     except UnicodeDecodeError:
-        #         Text = "ERROR"
-        #     LabelTexts.append({"LabelID": LabelID, "LabelClr": LabelClr, "Text": Text})
+                try:
+                    Data[i,:] = np.fromfile(f, count=NSamples, dtype="float32")
+                except ValueError:
+                    if i == NTraces-1:
+                        Data[i, :] = Data[i-1, :]
+                # if i == 0:
+                #     unPaint.drawPlot(np.arange(NSamples), Data[i,:])
 
-        f.close()
-        if isCompress:
+                # for j in range(NSamples):
+                #     A, = struct.unpack("f", f.read(struct.calcsize("f")))
+                #     Data[i][j] = A
+
+                Info.append(info)
+
             try:
-                os.remove(NewFileName)
-            except:
-                pass
+                Data = Data.astype("float64")
+            except MemoryError:
+                return None
+            # for i in range(NTraces):
+            #     if TimeCollecting[i] == 0:
+            #         if i == 0:
+            #             TimeCollecting[i] = TimeCollecting[i+1]
+            #         elif i == NTraces-1:
+            #             TimeCollecting[i] = TimeCollecting[i-1]
+            #         else:
+            #             TimeCollecting[i] = (TimeCollecting[i+1] + TimeCollecting[i-1])/2
 
-        Stage = Ddxmm/1000
-        if Stage <= 0: return None
-        TimeBase = Tall
-        if TimeBase <=0: return None
-        AntDist = La/1000
-        from app.gpr_calculations import EpsToVelocity
-        DefaultV = EpsToVelocity(Eps)
-        if DefaultV > 0.3: DefaultV = 0.3
-        StartPosition = StartPosition/1000
-        GainCoefs = MArray/np.max(MArray)
 
-        if np.all(Data == 0.0): return None
-        if (Data.shape[0] < 2) or (Data.shape[1] < 2): return None
-        return (Data, Stage, TimeBase, AntDist, DefaultV, StartPosition, Tspp, Kraz, WinSize, HorWinSize,
-                GainCoefs, TimeCollecting, GPRUnit, AntenName, Frequency, Labels)
-    # except:
-    #     return None
+            # TimeCollecting = np.array(TimeCollecting)
+            # Years = []
+            # for i,interval in enumerate(TimeCollecting):
+            #     # print(interval)
+            #     DateTime = app.utils.DateTransforms.getDateTime(interval)
+            #     if DateTime is None:
+            #         # print("Времена записи %d трассы некорректны!" % i)
+            #         TimeCollecting[i] = 0
+            #     else:
+            #         Years.append(DateTime.year)
+            # Years = np.array(Years)
+            # if len(Years) == 0:
+            #     TimeCollecting = None
+            # else:
+            #     freq = np.bincount(Years)
+            #     currYear = np.argmax(freq)
+            #     for i,interval in enumerate(TimeCollecting):
+            #         DateTime = app.utils.DateTransforms.getDateTime(interval)
+            #         if (DateTime is not None) and (np.abs(DateTime.year - currYear) > 1):
+            #             # print("Времена записи %d трассы некорректны! %d" % (i, DateTime.year))
+            #             TimeCollecting[i] = 0
+            #
+            #     if (len(TimeCollecting) <= 1) or (TimeCollecting[0] == 0) or (TimeCollecting[1] < TimeCollecting[0]) or (TimeCollecting[-1] == 0) or (TimeCollecting[-1] < TimeCollecting[-2]) :
+            #         TimeCollecting = None
+            #     else:
+            #         for i in range(1, len(TimeCollecting)-1):
+            #             if TimeCollecting[i] != 0:
+            #                 i1 = i-1
+            #                 i2 = i+1
+            #                 while (TimeCollecting[i1]==0):
+            #                     i1 -= 1
+            #                 while (TimeCollecting[i2]==0):
+            #                     i2 += 1
+            #                 if not (TimeCollecting[i1] <= TimeCollecting[i] <= TimeCollecting[i2]):
+            #                     TimeCollecting[i] = 0
+            #
+            #         from scipy.interpolate import interp1d
+            #         for i in range(1, len(TimeCollecting) - 1):
+            #             if TimeCollecting[i] == 0:
+            #                 i_last = i-1
+            #                 i_next = i+1
+            #                 while TimeCollecting[i_next] == 0:
+            #                     i_next += 1
+            #                 t_last = TimeCollecting[i_last]
+            #                 t_next = TimeCollecting[i_next]
+            #                 func = interp1d([i_last, i_next], [t_last, t_next], kind='linear', fill_value='extrapolate')
+            #                 TimeCollecting[i_last:i_next+1] = func(range(i_last, i_next+1))
+            #
+            #     if TimeCollecting is not None:
+            #         TimeCollecting = TimeCollecting.astype("int64")
+
+
+            # Чтение массива текстов меток
+            # LabelTexts = []
+            # for i in range(NTextLabels):
+            #     LabelID, LabelClr = struct.unpack("IL", f.read(struct.calcsize("IL")))
+            #     try:
+            #         Text = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
+            #     except UnicodeDecodeError:
+            #         Text = "ERROR"
+            #     LabelTexts.append({"LabelID": LabelID, "LabelClr": LabelClr, "Text": Text})
+
+            f.close()
+            if isCompress:
+                try:
+                    os.remove(NewFileName)
+                except:
+                    pass
+
+            Stage = Ddxmm/1000
+            if Stage <= 0: return None
+            TimeBase = Tall
+            if TimeBase <=0: return None
+            AntDist = La/1000
+            from app.gpr_calculations import EpsToVelocity
+            DefaultV = EpsToVelocity(Eps)
+            if DefaultV > 0.3: DefaultV = 0.3
+            StartPosition = StartPosition/1000
+            GainCoefs = MArray/np.max(MArray)
+
+            if np.all(Data == 0.0): return None
+            if (Data.shape[0] < 2) or (Data.shape[1] < 2): return None
+            return (Data, Stage, TimeBase, AntDist, DefaultV, StartPosition, Tspp, Kraz, WinSize, HorWinSize,
+                    GainCoefs, TimeCollecting, GPRUnit, AntenName, Frequency, Labels)
+    except:
+        return None
 
 
 def importFromSGY(FileName, endian='little'):
