@@ -2,7 +2,7 @@
 
 import numpy as np
 import os
-import utils
+import app.utils
 
 def importFromGeoScan(FileName, IsOldVersion = False):
     try:
@@ -134,7 +134,7 @@ def importFromGeoScan(FileName, IsOldVersion = False):
             Years = []
             for i,interval in enumerate(TimeCollecting):
                 # print(interval)
-                DateTime = utils.DateTransforms.getDateTime(interval)
+                DateTime = app.utils.DateTransforms.getDateTime(interval)
                 if DateTime is None:
                     print("Времена записи %d трассы некорректны!" % i)
                     TimeCollecting[i] = 0
@@ -147,7 +147,7 @@ def importFromGeoScan(FileName, IsOldVersion = False):
                 freq = np.bincount(Years)
                 currYear = np.argmax(freq)
                 for i,interval in enumerate(TimeCollecting):
-                    DateTime = utils.DateTransforms.getDateTime(interval)
+                    DateTime = app.utils.DateTransforms.getDateTime(interval)
                     if (DateTime is not None) and (np.abs(DateTime.year - currYear) > 1):
                         print("Времена записи %d трассы некорректны! %d" % (i, DateTime.year))
                         TimeCollecting[i] = 0
@@ -204,7 +204,7 @@ def importFromGeoScan(FileName, IsOldVersion = False):
             TimeBase = Tall
             if TimeBase <=0: return None
             AntDist = La/1000
-            from gpr_calculations import EpsToVelocity
+            from app.gpr_calculations import EpsToVelocity
             DefaultV = EpsToVelocity(Eps)
             if DefaultV > 0.3: DefaultV = 0.3
             StartPosition = StartPosition/1000
@@ -330,7 +330,7 @@ def importFromDT1(FileNameDT1, FileNameHD, DateFormat):
             TimeZeroSample = float(info["TIMEZERO AT POINT"])
 
             if Date is not None:
-                diff = utils.DateTransforms.dateTimeToInterval(Date)
+                diff = app.utils.DateTransforms.dateTimeToInterval(Date)
 
             with open(FileNameDT1, 'rb') as fDT1:
                 import struct

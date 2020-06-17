@@ -3,7 +3,7 @@ from flask import Flask, request, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 
 ALLOWED_EXTENSIONS = set(['rdr', 'txt', 'gpr', 'gpr2', 'rd3', 'dzt', 'sgy'])
-UPLOAD_FOLDER = 'app/tmp'
+UPLOAD_FOLDER = '/tmp/'
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -36,7 +36,7 @@ def upload_file():
         Rad = {"Data": None, "Stage": 1.0, "TimeBase": 512, "AntDist": 0, "DefaultV": 0.1, "GPRUnit": "", "AntenName": "","Frequency": 1000, "Error": None}
 
         if ext == ".txt":
-            from import_data import importFromTXT
+            from app.import_data import importFromTXT
             res = importFromTXT(filename)
             if res is not None:
                 Rad["Data"] = res
@@ -45,7 +45,7 @@ def upload_file():
                 return jsonify({"Error": "Не удалось загрузить файл"})
         elif ext == ".gpr" or ext == ".gpr2":
             isOldVersion = ext == ".gpr"
-            from import_data import importFromGeoScan
+            from app.import_data import importFromGeoScan
             res = importFromGeoScan(filename, IsOldVersion=isOldVersion)
             if res is not None:
                 Rad["Data"], Rad["Stage"], Rad["TimeBase"], Rad["AntDist"], Rad["DefaultV"], _, _, _, _, _, _, _, \
