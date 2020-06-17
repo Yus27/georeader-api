@@ -361,6 +361,8 @@ def importFromDT1(FileNameDT1, FileNameHD, DateFormat):
                 if (Data.shape[0] < 2) or (Data.shape[1] < 2): return None
                 return (Data, Stage, TimeBase, AntDist, GPRUnit, AntenName, Frequency, TimeZeroSample, TimeCollecting)
     except:
+        import traceback
+        traceback.print_exc()
         return None
 
 
