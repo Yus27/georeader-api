@@ -14,6 +14,7 @@ segyio = "*"
 readgssi = "*"
 pandas = "*"
 numba = "*"
+transliterate = "*"
 
 [requires]
 python_version = "3.7"

@@ -44,7 +44,7 @@ def importFromGeoScan(FileName, IsOldVersion = False):
             xState = State % 0x1000
             digit3 = xState // 0x100
             if digit3 >= 0x8:
-                print("Файл был сжат...")
+                # print("Файл был сжат...")
                 isCompress = True
             else:
                 isCompress = False
@@ -60,7 +60,7 @@ def importFromGeoScan(FileName, IsOldVersion = False):
                 AFilePath = os.path.dirname(FileName)
                 AFileName = os.path.basename(FileName)
                 NewFileName = AFilePath + "//___" + AFileName
-                print(NewFileName)
+                # print(NewFileName)
                 f = open(NewFileName, "wb")
                 f.write(decompress_data)
                 f.close()
@@ -136,7 +136,7 @@ def importFromGeoScan(FileName, IsOldVersion = False):
                 # print(interval)
                 DateTime = app.utils.DateTransforms.getDateTime(interval)
                 if DateTime is None:
-                    print("Времена записи %d трассы некорректны!" % i)
+                    # print("Времена записи %d трассы некорректны!" % i)
                     TimeCollecting[i] = 0
                 else:
                     Years.append(DateTime.year)
@@ -149,7 +149,7 @@ def importFromGeoScan(FileName, IsOldVersion = False):
                 for i,interval in enumerate(TimeCollecting):
                     DateTime = app.utils.DateTransforms.getDateTime(interval)
                     if (DateTime is not None) and (np.abs(DateTime.year - currYear) > 1):
-                        print("Времена записи %d трассы некорректны! %d" % (i, DateTime.year))
+                        # print("Времена записи %d трассы некорректны! %d" % (i, DateTime.year))
                         TimeCollecting[i] = 0
 
                 if (len(TimeCollecting) <= 1) or (TimeCollecting[0] == 0) or (TimeCollecting[1] < TimeCollecting[0]) or (TimeCollecting[-1] == 0) or (TimeCollecting[-1] < TimeCollecting[-2]) :

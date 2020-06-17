@@ -16,7 +16,6 @@ def upload_file():
     if request.method != 'POST':
         return jsonify({"Error": "Wrong method"})
 
-    # print(request.files)
     if 'file' not in request.files:
         return jsonify({"Error": "File is not send (1)"})
     file = request.files['file']
@@ -25,8 +24,9 @@ def upload_file():
     if not allowed_file(file.filename):
         return jsonify({"Error": "Wrong file format"})
 
-    ext = os.path.splitext(file.filename)[1]
-    filename = secure_filename(file.filename) + ext
+    from transliterate import translit
+    filename = translit(file.filename, 'ru', reversed=True)
+    filename = secure_filename(filename)
     filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
     try:
@@ -42,7 +42,7 @@ def upload_file():
                 Rad["Data"] = res
                 Rad["GPRUnit"] = "ЛОЗА"
             else:
-                return jsonify({"Error": "Не удалось загрузить файл"})
+                return jsonify({"Error": "Error while file reading"})
         elif ext == ".gpr" or ext == ".gpr2":
             isOldVersion = ext == ".gpr"
             from app.import_data import importFromGeoScan
@@ -51,7 +51,7 @@ def upload_file():
                 Rad["Data"], Rad["Stage"], Rad["TimeBase"], Rad["AntDist"], Rad["DefaultV"], _, _, _, _, _, _, _, \
                 Rad["GPRUnit"], Rad["AntenName"], Rad["Frequency"], _ = res
             else:
-                return jsonify({"Error": "Не удалось загрузить файл"})
+                return jsonify({"Error": "Error while file reading"})
 
         Rad["Data"] = Rad["Data"].tolist()
         return jsonify(Rad)
