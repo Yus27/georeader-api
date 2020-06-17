@@ -3,7 +3,7 @@ from flask import Flask, request, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 
 ALLOWED_EXTENSIONS = set(['rdr', 'txt', 'gpr', 'gpr2', 'rd3', 'dzt', 'sgy'])
-UPLOAD_FOLDER = 'tmp'
+UPLOAD_FOLDER = 'app/tmp'
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
