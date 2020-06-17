@@ -130,67 +130,67 @@ def importFromGeoScan(FileName, IsOldVersion = False):
         #             TimeCollecting[i] = (TimeCollecting[i+1] + TimeCollecting[i-1])/2
 
 
-        TimeCollecting = np.array(TimeCollecting)
-        Years = []
-        for i,interval in enumerate(TimeCollecting):
-            # print(interval)
-            DateTime = app.utils.DateTransforms.getDateTime(interval)
-            if DateTime is None:
-                # print("Времена записи %d трассы некорректны!" % i)
-                TimeCollecting[i] = 0
-            else:
-                Years.append(DateTime.year)
-        Years = np.array(Years)
-        if len(Years) == 0:
-            TimeCollecting = None
-        else:
-            freq = np.bincount(Years)
-            currYear = np.argmax(freq)
-            for i,interval in enumerate(TimeCollecting):
-                DateTime = app.utils.DateTransforms.getDateTime(interval)
-                if (DateTime is not None) and (np.abs(DateTime.year - currYear) > 1):
-                    # print("Времена записи %d трассы некорректны! %d" % (i, DateTime.year))
-                    TimeCollecting[i] = 0
-
-            if (len(TimeCollecting) <= 1) or (TimeCollecting[0] == 0) or (TimeCollecting[1] < TimeCollecting[0]) or (TimeCollecting[-1] == 0) or (TimeCollecting[-1] < TimeCollecting[-2]) :
-                TimeCollecting = None
-            else:
-                for i in range(1, len(TimeCollecting)-1):
-                    if TimeCollecting[i] != 0:
-                        i1 = i-1
-                        i2 = i+1
-                        while (TimeCollecting[i1]==0):
-                            i1 -= 1
-                        while (TimeCollecting[i2]==0):
-                            i2 += 1
-                        if not (TimeCollecting[i1] <= TimeCollecting[i] <= TimeCollecting[i2]):
-                            TimeCollecting[i] = 0
-
-                from scipy.interpolate import interp1d
-                for i in range(1, len(TimeCollecting) - 1):
-                    if TimeCollecting[i] == 0:
-                        i_last = i-1
-                        i_next = i+1
-                        while TimeCollecting[i_next] == 0:
-                            i_next += 1
-                        t_last = TimeCollecting[i_last]
-                        t_next = TimeCollecting[i_next]
-                        func = interp1d([i_last, i_next], [t_last, t_next], kind='linear', fill_value='extrapolate')
-                        TimeCollecting[i_last:i_next+1] = func(range(i_last, i_next+1))
-
-            if TimeCollecting is not None:
-                TimeCollecting = TimeCollecting.astype("int64")
+        # TimeCollecting = np.array(TimeCollecting)
+        # Years = []
+        # for i,interval in enumerate(TimeCollecting):
+        #     # print(interval)
+        #     DateTime = app.utils.DateTransforms.getDateTime(interval)
+        #     if DateTime is None:
+        #         # print("Времена записи %d трассы некорректны!" % i)
+        #         TimeCollecting[i] = 0
+        #     else:
+        #         Years.append(DateTime.year)
+        # Years = np.array(Years)
+        # if len(Years) == 0:
+        #     TimeCollecting = None
+        # else:
+        #     freq = np.bincount(Years)
+        #     currYear = np.argmax(freq)
+        #     for i,interval in enumerate(TimeCollecting):
+        #         DateTime = app.utils.DateTransforms.getDateTime(interval)
+        #         if (DateTime is not None) and (np.abs(DateTime.year - currYear) > 1):
+        #             # print("Времена записи %d трассы некорректны! %d" % (i, DateTime.year))
+        #             TimeCollecting[i] = 0
+        #
+        #     if (len(TimeCollecting) <= 1) or (TimeCollecting[0] == 0) or (TimeCollecting[1] < TimeCollecting[0]) or (TimeCollecting[-1] == 0) or (TimeCollecting[-1] < TimeCollecting[-2]) :
+        #         TimeCollecting = None
+        #     else:
+        #         for i in range(1, len(TimeCollecting)-1):
+        #             if TimeCollecting[i] != 0:
+        #                 i1 = i-1
+        #                 i2 = i+1
+        #                 while (TimeCollecting[i1]==0):
+        #                     i1 -= 1
+        #                 while (TimeCollecting[i2]==0):
+        #                     i2 += 1
+        #                 if not (TimeCollecting[i1] <= TimeCollecting[i] <= TimeCollecting[i2]):
+        #                     TimeCollecting[i] = 0
+        #
+        #         from scipy.interpolate import interp1d
+        #         for i in range(1, len(TimeCollecting) - 1):
+        #             if TimeCollecting[i] == 0:
+        #                 i_last = i-1
+        #                 i_next = i+1
+        #                 while TimeCollecting[i_next] == 0:
+        #                     i_next += 1
+        #                 t_last = TimeCollecting[i_last]
+        #                 t_next = TimeCollecting[i_next]
+        #                 func = interp1d([i_last, i_next], [t_last, t_next], kind='linear', fill_value='extrapolate')
+        #                 TimeCollecting[i_last:i_next+1] = func(range(i_last, i_next+1))
+        #
+        #     if TimeCollecting is not None:
+        #         TimeCollecting = TimeCollecting.astype("int64")
 
 
         # Чтение массива текстов меток
-        LabelTexts = []
-        for i in range(NTextLabels):
-            LabelID, LabelClr = struct.unpack("IL", f.read(struct.calcsize("IL")))
-            try:
-                Text = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
-            except UnicodeDecodeError:
-                Text = "ERROR"
-            LabelTexts.append({"LabelID": LabelID, "LabelClr": LabelClr, "Text": Text})
+        # LabelTexts = []
+        # for i in range(NTextLabels):
+        #     LabelID, LabelClr = struct.unpack("IL", f.read(struct.calcsize("IL")))
+        #     try:
+        #         Text = f.read(F4_TEXT_STRING_SIZE).decode("windows-1251")
+        #     except UnicodeDecodeError:
+        #         Text = "ERROR"
+        #     LabelTexts.append({"LabelID": LabelID, "LabelClr": LabelClr, "Text": Text})
 
         f.close()
         if isCompress:
