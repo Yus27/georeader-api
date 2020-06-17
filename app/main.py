@@ -3,7 +3,7 @@ from flask import Flask, request, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 
 ALLOWED_EXTENSIONS = set(['rdr', 'txt', 'gpr', 'gpr2', 'rd3', 'dzt', 'sgy'])
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = 'tmp'
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -16,7 +16,7 @@ def upload_file():
     if request.method != 'POST':
         return jsonify({"Error": "Неверный метод"})
 
-    print(request.files)
+    # print(request.files)
     if 'file' not in request.files:
         return jsonify({"Error": "Файл не передан1"})
     file = request.files['file']
@@ -56,8 +56,9 @@ def upload_file():
         Rad["Data"] = Rad["Data"].tolist()
         return jsonify(Rad)
     finally:
-        os.remove(filename)
+        pass
+        # os.remove(filename)
 
-#
+
 # if __name__ == '__main__':
 #     app.run(debug=True)
