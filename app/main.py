@@ -1,12 +1,21 @@
 import os
 from flask import Flask, request, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
+
 
 ALLOWED_EXTENSIONS = set(['rdr', 'txt', 'gpr', 'gpr2', 'rd3', 'dzt', 'sgy'])
-UPLOAD_FOLDER = '/tmp/'
+
+is_local = False
+if is_local:
+    UPLOAD_FOLDER = 'tmp/'
+else:
+    UPLOAD_FOLDER = '/tmp/'
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+CORS(app) #TODO: заменить, сейчас доступ из всех ресурсов
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
@@ -53,7 +62,7 @@ def upload_file():
             else:
                 return jsonify({"Error": "Error while file reading"})
 
-        Rad["Data"] = Rad["Data"].tolist()
+        Rad["Data"] = Rad["Data"].T.tolist()
         return jsonify(Rad)
     finally:
         pass
